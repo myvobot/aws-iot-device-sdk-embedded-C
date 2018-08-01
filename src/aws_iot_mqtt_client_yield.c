@@ -153,7 +153,8 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 
 	pClient->clientStatus.isPingOutstanding = true;
 	/* start a timer to wait for PINGRESP from server */
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+	countdown_sec(&pClient->pingTimer, 5);//pClient->clientData.keepAliveInterval);
+	IOT_INFO("ping outstanding %d", pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
