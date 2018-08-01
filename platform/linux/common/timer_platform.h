@@ -32,6 +32,7 @@ extern "C" {
  */
 struct Timer {
 	struct timeval end_time;
+    uint32_t timeout_sec;
 };
 
 #ifdef __cplusplus

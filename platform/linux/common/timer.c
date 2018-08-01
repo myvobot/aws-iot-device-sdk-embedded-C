@@ -33,6 +33,13 @@ bool has_timer_expired(Timer *timer) {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);
 	timersub(&timer->end_time, &now, &res);
+
+	/* NOTE: when sytem datetime change, end_time will be invalid! thus res is invalid
+	 * if time difference > timeout_sec, consider expiration (in case system datetime
+     * changed, lead to never expire...
+	*/
+	if (res.tv_sec > timer->timeout_sec)
+		return true;
 	return res.tv_sec < 0 || (res.tv_sec == 0 && res.tv_usec <= 0);
 }
 
@@ -45,6 +52,7 @@ void countdown_ms(Timer *timer, uint32_t timeout) {
 #endif
 	gettimeofday(&now, NULL);
 	timeradd(&now, &interval, &timer->end_time);
+	timer->timeout_sec = timeout/1000;
 }
 
 uint32_t left_ms(Timer *timer) {
@@ -55,6 +63,8 @@ uint32_t left_ms(Timer *timer) {
 	if(res.tv_sec >= 0) {
 		result_ms = (uint32_t) (res.tv_sec * 1000 + res.tv_usec / 1000);
 	}
+	if (result_ms/1000 > timer->timeout_sec)
+		result_ms = timer->timeout_sec*1000;
 	return result_ms;
 }
 
@@ -63,10 +73,12 @@ void countdown_sec(Timer *timer, uint32_t timeout) {
 	struct timeval interval = {timeout, 0};
 	gettimeofday(&now, NULL);
 	timeradd(&now, &interval, &timer->end_time);
+	timer->timeout_sec = timeout;
 }
 
 void init_timer(Timer *timer) {
 	timer->end_time = (struct timeval) {0, 0};
+	timer->timeout_sec = 0;
 }
 
 #ifdef __cplusplus
